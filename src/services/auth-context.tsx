@@ -38,6 +38,14 @@ interface BootstrapAuthState {
 let bootstrapAuthState: BootstrapAuthState | null = null;
 let bootstrapAuthPromise: Promise<BootstrapAuthState> | null = null;
 
+function getAppUrl(path = "") {
+  if (typeof window === "undefined") {
+    return path;
+  }
+
+  return new URL(`${import.meta.env.BASE_URL}${path}`.replace(/^\//, ""), `${window.location.origin}/`).toString();
+}
+
 function readStoredAuthFlow(): AuthFlow {
   if (typeof window === "undefined") {
     return null;
@@ -268,7 +276,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         }
 
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/login`,
+          redirectTo: getAppUrl("login"),
         });
         return error ? { error: error.message } : {};
       },

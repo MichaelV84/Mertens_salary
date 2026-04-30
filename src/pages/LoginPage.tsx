@@ -19,6 +19,10 @@ export function LoginPage() {
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  function getLoginPath() {
+    return `${import.meta.env.BASE_URL}login`.replace(/\/{2,}/g, "/");
+  }
+
   useEffect(() => {
     if (getRecoveryMode() || authFlow === "recovery") {
       setMode("reset");
@@ -161,7 +165,7 @@ export function LoginPage() {
                 onClick={() => {
                   clearAuthFlow();
                   setMode("login");
-                  window.history.replaceState({}, document.title, "/login");
+                  window.history.replaceState({}, document.title, getLoginPath());
                 }}
               >
                 חזרה לכניסה
