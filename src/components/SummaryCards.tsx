@@ -57,7 +57,7 @@ export function SummaryCards({
               <span className="muted">שעות עבודה</span>
               <strong dir="ltr">{workHours.toFixed(2)}</strong>
             </div>
-            <div className="summary-metric">
+            <div className="summary-metric summary-metric-full">
               <span className="muted">שעות מחלה/חופש</span>
               <strong dir="ltr">{leaveHours.toFixed(2)}</strong>
             </div>

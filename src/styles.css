@@ -271,6 +271,10 @@ input[type="number"] {
   flex-wrap: wrap;
 }
 
+.summary-metric-full {
+  width: 100%;
+}
+
 .summary-rates {
   display: flex;
   gap: 0.6rem;
@@ -417,6 +421,7 @@ input[type="number"] {
 
 .compact-day-row {
   display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   gap: 0.75rem;
   width: 100%;
   background: transparent;
@@ -462,6 +467,35 @@ input[type="number"] {
 
 .compact-day-row-date {
   font-weight: 700;
+}
+
+.compact-day-row > :nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.compact-day-row > :nth-child(3) {
+  grid-column: 2;
+  grid-row: 2;
+  color: #5c7281;
+}
+
+.compact-day-row > :nth-child(4) {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.compact-day-row > :nth-child(5) {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: end;
+}
+
+.compact-day-row > :nth-child(6) {
+  grid-column: 3;
+  grid-row: 3;
+  justify-self: end;
 }
 
 .expanded-day-panel {
@@ -571,9 +605,154 @@ input[type="number"] {
   max-width: 260px;
 }
 
+.dashboard-toolbar {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-exports {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
 .error-text {
   color: #8b1e3f;
   margin: 0;
+}
+
+@media (max-width: 767px) {
+  .app-shell {
+    padding: 0.75rem;
+  }
+
+  .topbar {
+    justify-content: center;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    padding-top: 0;
+  }
+
+  .tabs a {
+    text-align: center;
+  }
+
+  .card {
+    border-radius: 20px;
+    padding: 0.9rem;
+  }
+
+  .summary-card {
+    gap: 1.2rem;
+    padding: 1rem;
+  }
+
+  .summary-topline {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .summary-top-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .summary-account {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .summary-email {
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .summary-logout {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .summary-totals {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .summary-totals .summary-metric-full {
+    grid-column: 1 / -1;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .summary-card strong {
+    font-size: 1.1rem;
+  }
+
+  .summary-rates {
+    justify-content: center;
+  }
+
+  .summary-rate-chip {
+    font-size: 0.88rem;
+  }
+
+  .month-selector {
+    max-width: none;
+  }
+
+  .dashboard-exports button {
+    min-height: 56px;
+  }
+
+  .compact-day-card {
+    padding: 0.85rem;
+  }
+
+  .compact-day-toggle {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .compact-day-row {
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+  }
+
+  .compact-day-row-date {
+    font-size: 1.2rem;
+  }
+
+  .expanded-day-panel .row.space-between,
+  .day-card-header {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .day-total {
+    justify-items: start;
+  }
+
+  .breakdown-row {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .compact-day-form {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-submit-button,
+  .compact-cancel-button {
+    width: 100%;
+  }
 }
 
 @media (min-width: 768px) {
@@ -593,6 +772,29 @@ input[type="number"] {
   .compact-day-row {
     grid-template-columns: 48px minmax(130px, 1fr) minmax(120px, 1fr) minmax(90px, 0.7fr) minmax(90px, 0.7fr) minmax(120px, 0.9fr);
     align-items: center;
+  }
+
+  .compact-day-row > :nth-child(2),
+  .compact-day-row > :nth-child(3),
+  .compact-day-row > :nth-child(4),
+  .compact-day-row > :nth-child(5),
+  .compact-day-row > :nth-child(6) {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: auto;
+    color: inherit;
+  }
+
+  .dashboard-toolbar {
+    grid-template-columns: minmax(240px, 280px) 1fr;
+    align-items: end;
+  }
+
+  .dashboard-exports {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .compact-shift-row {

@@ -289,8 +289,9 @@ export function DashboardPage() {
         workingDays={monthWorkingDays}
         rateSummary={monthRateSummary}
       />
-      <MonthSelector value={selectedMonth} onChange={setSelectedMonth} />
-      <div className="row wrap">
+      <div className="dashboard-toolbar">
+        <MonthSelector value={selectedMonth} onChange={setSelectedMonth} />
+        <div className="dashboard-exports">
         <button
           onClick={() =>
             exportShiftsToExcel(shiftRows, selectedMonth, {
@@ -318,6 +319,7 @@ export function DashboardPage() {
         >
           ייצוא ל-PDF
         </button>
+        </div>
       </div>
       <MonthDayList
         dates={monthDates}
