@@ -809,3 +809,229 @@ input[type="number"] {
     grid-column: 1 / -1;
   }
 }
+
+/* Mobile dashboard refresh */
+.summary-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.summary-pair-grid,
+.summary-triple-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.summary-pair-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summary-triple-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-pair-grid .summary-metric,
+.summary-triple-grid .summary-metric {
+  min-width: 0;
+}
+
+.summary-pair-grid .summary-metric:last-child,
+.summary-triple-grid .summary-metric:last-child {
+  justify-items: end;
+  text-align: right;
+}
+
+.compact-day-row {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+
+.compact-day-row-body {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.compact-day-row-top,
+.compact-day-row-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.compact-day-row-top {
+  font-weight: 700;
+}
+
+.compact-day-row-weekday {
+  color: #5c7281;
+  font-weight: 400;
+}
+
+.compact-day-row-start,
+.compact-day-row-end,
+.compact-day-row-hours {
+  font-size: 1.05rem;
+}
+
+.dashboard-toolbar {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-exports {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 767px) {
+  .app-shell {
+    padding: 0.75rem;
+  }
+
+  .topbar {
+    justify-content: center;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    padding: 0 0 0.5rem;
+  }
+
+  .tabs a {
+    text-align: center;
+    width: 100%;
+  }
+
+  .card {
+    border-radius: 20px;
+    padding: 0.9rem;
+  }
+
+  .summary-card {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .summary-email {
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .summary-logout {
+    min-width: 88px;
+  }
+
+  .summary-pair-grid,
+  .summary-triple-grid {
+    gap: 0.85rem;
+  }
+
+  .summary-triple-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .summary-card strong {
+    font-size: 1rem;
+  }
+
+  .summary-rates {
+    justify-content: center;
+  }
+
+  .summary-rate-chip {
+    font-size: 0.86rem;
+  }
+
+  .month-selector {
+    max-width: none;
+  }
+
+  .dashboard-exports button {
+    min-height: 56px;
+  }
+
+  .compact-day-card {
+    padding: 0.9rem;
+  }
+
+  .compact-day-toggle {
+    width: 2.1rem;
+    height: 2.1rem;
+    font-size: 1.15rem;
+  }
+
+  .compact-day-row-body {
+    gap: 0.65rem;
+  }
+
+  .compact-day-row-date {
+    font-size: 1.15rem;
+  }
+
+  .compact-day-row-bottom {
+    font-size: 0.98rem;
+  }
+
+  .expanded-day-panel .row.space-between,
+  .day-card-header {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .day-total {
+    justify-items: start;
+  }
+
+  .breakdown-row {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .compact-day-form {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-submit-button,
+  .compact-cancel-button {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .summary-account-row {
+    justify-content: space-between;
+  }
+
+  .summary-card strong {
+    font-size: 1.35rem;
+  }
+
+  .dashboard-toolbar {
+    grid-template-columns: minmax(240px, 280px) 1fr;
+    align-items: end;
+  }
+
+  .dashboard-exports {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .compact-day-row {
+    grid-template-columns: 48px 1fr;
+    align-items: center;
+  }
+
+  .compact-day-row-body {
+    gap: 0.55rem;
+  }
+}

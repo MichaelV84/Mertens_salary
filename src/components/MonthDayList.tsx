@@ -321,11 +321,19 @@ export function MonthDayList({
               onClick={() => setExpandedDate((current) => (current === date ? null : date))}
             >
               <span className="compact-day-toggle">{isExpanded ? "−" : "+"}</span>
-              <span className="compact-day-row-value compact-day-row-date">{date}</span>
-              <span className="compact-day-row-value">{formatWeekday(date)}</span>
-              <span className="compact-day-row-value">{rowTimeRange?.start ?? ""}</span>
-              <span className="compact-day-row-value">{rowTimeRange?.end ?? ""}</span>
-              <span className="compact-day-row-value">{dayItems.length ? `${dayHours.toFixed(2)} ${labels.hours}` : ""}</span>
+              <span className="compact-day-row-body">
+                <span className="compact-day-row-top">
+                  <span className="compact-day-row-value compact-day-row-date">{date}</span>
+                  <span className="compact-day-row-value compact-day-row-weekday">{formatWeekday(date)}</span>
+                </span>
+                {dayItems.length ? (
+                  <span className="compact-day-row-bottom">
+                    <span className="compact-day-row-value compact-day-row-start">{rowTimeRange?.start ?? ""}</span>
+                    <span className="compact-day-row-value compact-day-row-end">{rowTimeRange?.end ?? ""}</span>
+                    <span className="compact-day-row-value compact-day-row-hours">{dayHours.toFixed(2)} {labels.hours}</span>
+                  </span>
+                ) : null}
+              </span>
             </button>
 
             {isExpanded ? (
