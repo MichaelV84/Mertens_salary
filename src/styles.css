@@ -816,7 +816,7 @@ input[type="number"] {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .summary-pair-grid,
@@ -833,15 +833,16 @@ input[type="number"] {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.summary-pair-grid .summary-metric,
-.summary-triple-grid .summary-metric {
+.summary-metric-card {
   min-width: 0;
+  padding: 0.7rem 0.75rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
-.summary-pair-grid .summary-metric:last-child,
-.summary-triple-grid .summary-metric:last-child {
-  justify-items: end;
-  text-align: right;
+.summary-metric-card strong {
+  margin-top: 0.15rem;
 }
 
 .compact-day-row {
@@ -922,12 +923,16 @@ input[type="number"] {
   }
 
   .summary-email {
-    font-size: 1rem;
+    font-size: 0.98rem;
     overflow-wrap: anywhere;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .summary-logout {
-    min-width: 88px;
+    min-width: 84px;
+    padding: 0.7rem 0.9rem;
+    flex: 0 0 auto;
   }
 
   .summary-pair-grid,
@@ -936,11 +941,16 @@ input[type="number"] {
   }
 
   .summary-triple-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .summary-card strong {
-    font-size: 1rem;
+    font-size: 1.35rem;
+  }
+
+  .summary-metric-card {
+    justify-items: center;
+    text-align: center;
   }
 
   .summary-rates {
@@ -1033,5 +1043,188 @@ input[type="number"] {
 
   .compact-day-row-body {
     gap: 0.55rem;
+  }
+
+  .summary-triple-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .summary-metric-card {
+    justify-items: center;
+    text-align: center;
+  }
+}
+
+/* Mobile summary tightening */
+.summary-card {
+  gap: 0.85rem;
+}
+
+.summary-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.summary-email {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.summary-logout {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 0.7rem 0.95rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #133c55;
+  font-weight: 700;
+}
+
+.summary-pair-grid,
+.summary-triple-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.summary-pair-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summary-triple-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-metric-card {
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+  justify-items: center;
+  padding: 0.75rem 0.6rem;
+  text-align: center;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.summary-metric-card .muted {
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.summary-metric-card strong {
+  margin-top: 0.1rem;
+}
+
+.summary-rates {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.compact-day-row {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+
+.compact-day-row-body {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.compact-day-row-top,
+.compact-day-row-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.compact-day-row-top {
+  font-weight: 700;
+}
+
+.compact-day-row-weekday {
+  color: #5c7281;
+  font-weight: 400;
+}
+
+@media (max-width: 767px) {
+  .summary-card {
+    gap: 0.75rem;
+    padding: 0.95rem;
+  }
+
+  .summary-account-row {
+    gap: 0.6rem;
+  }
+
+  .summary-email {
+    font-size: 0.98rem;
+  }
+
+  .summary-logout {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  .summary-pair-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary-triple-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .summary-metric-card {
+    padding: 0.7rem 0.45rem;
+  }
+
+  .summary-metric-card .muted {
+    font-size: 0.8rem;
+  }
+
+  .summary-card strong {
+    font-size: 1.15rem;
+  }
+
+  .summary-rates {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .summary-rate-chip {
+    display: flex;
+    justify-content: center;
+    font-size: 0.83rem;
+    text-align: center;
+  }
+
+  .compact-day-card {
+    padding: 0.95rem;
+  }
+
+  .compact-day-toggle {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .compact-day-row-top {
+    font-size: 1.1rem;
+  }
+
+  .compact-day-row-bottom {
+    font-size: 0.98rem;
+  }
+
+  .compact-day-row-hours {
+    white-space: nowrap;
   }
 }
