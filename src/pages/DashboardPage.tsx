@@ -37,6 +37,12 @@ function getMonthDates(date: Date) {
   return Array.from({ length: daysInMonth }, (_, index) => formatDate(new Date(date.getFullYear(), date.getMonth(), index + 1)));
 }
 
+function getPreviousDate(date: string) {
+  const previousDate = new Date(`${date}T00:00:00`);
+  previousDate.setDate(previousDate.getDate() - 1);
+  return formatDate(previousDate);
+}
+
 function getInitialSelectedMonth() {
   if (typeof window === "undefined") {
     return new Date();
@@ -116,6 +122,7 @@ export function DashboardPage() {
 
   const shiftRows = useMemo(() => {
     const elapsedHoursByDate: Record<string, number> = {};
+    const sickDates = new Set(shifts.filter((shift) => shift.day_type === "sick").map((shift) => shift.shift_date));
 
     return [...visibleShifts]
       .sort((left, right) => `${left.shift_date} ${left.start_time}`.localeCompare(`${right.shift_date} ${right.start_time}`))
@@ -124,7 +131,7 @@ export function DashboardPage() {
         const salary = calculateSalary(combineDateAndTime(shift.shift_date, shift.start_time), combineDateAndTime(shift.shift_date, shift.end_time), {
           baseRate: settings.base_rate,
           elapsedHoursOffset,
-          isPaidSickDay: shift.day_type === "sick",
+          isPaidSickDay: shift.day_type === "sick" && sickDates.has(getPreviousDate(shift.shift_date)),
           manualHolidays,
           dayType: shift.day_type,
         });

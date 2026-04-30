@@ -220,21 +220,19 @@ describe("calculateSalary", () => {
     ]);
   });
 
-  it("pays sick day as flat base hours", () => {
-    const sickDay = calculateSalary(
+  it("does not pay first sick day and pays sick day from the second consecutive day", () => {
+    const firstSickDay = calculateSalary(
       new Date("2026-01-12T07:30:00"),
       new Date("2026-01-12T16:30:00"),
+      { baseRate: 60, dayType: "sick", isPaidSickDay: false },
+    );
+    const secondSickDay = calculateSalary(
+      new Date("2026-01-13T07:30:00"),
+      new Date("2026-01-13T16:30:00"),
       { baseRate: 60, dayType: "sick", isPaidSickDay: true },
     );
 
-    expect(sickDay.total).toBe(540);
-    expect(sickDay.breakdown).toEqual([
-      {
-        hours: 9,
-        rate: 60,
-        amount: 540,
-        type: "מחלה 100%",
-      },
-    ]);
+    expect(firstSickDay.total).toBe(0);
+    expect(secondSickDay.total).toBe(540);
   });
 });
