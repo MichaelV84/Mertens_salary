@@ -11,9 +11,6 @@ type AuthFlow = "recovery" | null;
 interface AuthContextValue {
   user: User | null;
   profile: AppUser | null;
-  profileLoading: boolean;
-  profileError: string;
-  profileMissing: boolean;
   isAdmin: boolean;
   session: Session | null;
   loading: boolean;
@@ -26,17 +23,19 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
 }
 
+interface BootstrapAuthState {
+  session: Session | null;
+  user: User | null;
+}
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const missingSupabaseError = "חסרים משתני סביבה של Supabase";
 const authFlowStorageKey = "mertens-auth-flow";
 const forcedSignedOutStorageKey = "mertens-forced-signed-out";
 const profileCacheStorageKey = "mertens-profile-cache";
 const profileLoadTimeoutMs = 6000;
-
-interface BootstrapAuthState {
-  session: Session | null;
-  user: User | null;
-}
+const backgroundProfileRefreshDelayMs = 800;
+const bootstrapProfileRefreshDelayMs = 1200;
 
 let bootstrapAuthState: BootstrapAuthState | null = null;
 let bootstrapAuthPromise: Promise<BootstrapAuthState> | null = null;
@@ -47,6 +46,16 @@ function getAppUrl(path = "") {
   }
 
   return new URL(`${import.meta.env.BASE_URL}${path}`.replace(/^\//, ""), `${window.location.origin}/`).toString();
+}
+
+function isRecoveryUrl() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const searchParams = new URLSearchParams(window.location.search);
+  return hashParams.get("type") === "recovery" || searchParams.get("type") === "recovery";
 }
 
 function readStoredAuthFlow(): AuthFlow {
@@ -128,11 +137,7 @@ function readCachedProfile(userId: string) {
     }
 
     const parsedValue = JSON.parse(rawValue) as { userId?: string; profile?: AppUser | null };
-    if (parsedValue.userId !== userId) {
-      return null;
-    }
-
-    return parsedValue.profile ?? null;
+    return parsedValue.userId === userId ? parsedValue.profile ?? null : null;
   } catch {
     return null;
   }
@@ -157,16 +162,6 @@ function clearCachedProfile() {
   }
 
   window.localStorage.removeItem(profileCacheStorageKey);
-}
-
-function isRecoveryUrl() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  const searchParams = new URLSearchParams(window.location.search);
-  return hashParams.get("type") === "recovery" || searchParams.get("type") === "recovery";
 }
 
 async function loadProfileForUser(nextUser: User | null) {
@@ -235,13 +230,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const bootstrapUser = bootstrapAuthState?.user;
     return bootstrapUser ? readCachedProfile(bootstrapUser.id) : null;
   });
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileError, setProfileError] = useState("");
   const [session, setSession] = useState<Session | null>(() => bootstrapAuthState?.session ?? null);
   const [loading, setLoading] = useState(() => (supabase ? bootstrapAuthState === null : false));
   const [authFlow, setAuthFlow] = useState<AuthFlow>(() => (isRecoveryUrl() ? "recovery" : readStoredAuthFlow()));
   const userRef = useRef<User | null>(bootstrapAuthState?.user ?? null);
-  const profileRef = useRef<AppUser | null>(null);
+  const profileRef = useRef<AppUser | null>(bootstrapAuthState?.user ? readCachedProfile(bootstrapAuthState.user.id) : null);
 
   useEffect(() => {
     writeStoredAuthFlow(authFlow);
@@ -256,11 +249,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [profile]);
 
   useEffect(() => {
-    function handleAuthFlow(event: AuthChangeEvent) {
-      if (event === "PASSWORD_RECOVERY" || isRecoveryUrl()) {
-        setAuthFlow("recovery");
-      }
+    if (!supabase) {
+      setLoading(false);
+      return;
     }
+
+    let isActive = true;
 
     function applyAuthState(nextSession: Session | null) {
       const shouldIgnoreSession = readForcedSignedOut() && !isRecoveryUrl();
@@ -276,20 +270,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
       userRef.current = nextUser;
       setSession(safeSession);
       setUser(nextUser);
+      setLoading(false);
+
       if (!nextUser) {
         profileRef.current = null;
         clearCachedProfile();
         setProfile(null);
-        setProfileLoading(false);
-        setProfileError("");
       } else if (previousUserId !== nextUser.id) {
         const cachedProfile = readCachedProfile(nextUser.id);
         profileRef.current = cachedProfile;
         setProfile(cachedProfile);
-        setProfileLoading(false);
-        setProfileError("");
       }
-      setLoading(false);
 
       return {
         previousUserId,
@@ -297,32 +288,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
       };
     }
 
-    async function refreshProfile(nextUser: User | null, options?: { force?: boolean; silent?: boolean }) {
-      if (!isActive) {
-        return;
-      }
-
-      if (!nextUser) {
-        profileRef.current = null;
-        clearCachedProfile();
-        setProfile(null);
-        setProfileLoading(false);
-        setProfileError("");
+    async function refreshProfile(nextUser: User | null, force = false) {
+      if (!isActive || !nextUser) {
         return;
       }
 
       const hasCurrentProfile = userRef.current?.id === nextUser.id && Boolean(profileRef.current);
-      if (!options?.force && hasCurrentProfile) {
-        if (!options?.silent) {
-          setProfileLoading(false);
-          setProfileError("");
-        }
+      if (!force && hasCurrentProfile) {
         return;
-      }
-
-      if (!options?.silent) {
-        setProfileLoading(true);
-        setProfileError("");
       }
 
       try {
@@ -334,59 +307,41 @@ export function AuthProvider({ children }: PropsWithChildren) {
         profileRef.current = nextProfile;
         writeCachedProfile(nextUser.id, nextProfile);
         setProfile(nextProfile);
-      } catch (error) {
+      } catch {
         if (!isActive) {
           return;
         }
 
         const hasStaleProfile = userRef.current?.id === nextUser.id && Boolean(profileRef.current);
-        if (hasStaleProfile) {
-          if (!options?.silent) {
-            setProfileError("");
-          }
-        } else {
+        if (!hasStaleProfile) {
           profileRef.current = null;
           clearCachedProfile();
           setProfile(null);
-          if (!options?.silent) {
-            setProfileError(formatSupabaseError(error, "Failed to load account profile."));
-          }
         }
-      }
-
-      if (!isActive) {
-        return;
-      }
-
-      if (!options?.silent) {
-        setProfileLoading(false);
       }
     }
 
-    function scheduleProfileRefresh(nextUser: User | null, options?: { force?: boolean; silent?: boolean; delayMs?: number }) {
+    function scheduleProfileRefresh(nextUser: User | null, force = false, delayMs = 0) {
       window.setTimeout(() => {
         if (!isActive) {
           return;
         }
 
-        void refreshProfile(nextUser, options);
-      }, options?.delayMs ?? 0);
+        void refreshProfile(nextUser, force);
+      }, delayMs);
     }
-
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
-    let isActive = true;
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      handleAuthFlow(event);
+      if (event === "PASSWORD_RECOVERY" || isRecoveryUrl()) {
+        setAuthFlow("recovery");
+      }
+
       if (!isActive) {
         return;
       }
+
       const { previousUserId, nextUserId } = applyAuthState(nextSession);
       const isSameUser = previousUserId !== null && previousUserId === nextUserId;
       const shouldForceProfileRefresh =
@@ -394,24 +349,19 @@ export function AuthProvider({ children }: PropsWithChildren) {
         event === "PASSWORD_RECOVERY" ||
         (!isSameUser && event !== "INITIAL_SESSION");
 
-      scheduleProfileRefresh(nextSession?.user ?? null, {
-        force: shouldForceProfileRefresh,
-        silent: true,
-        delayMs: 800,
-      });
+      scheduleProfileRefresh(nextSession?.user ?? null, shouldForceProfileRefresh, backgroundProfileRefreshDelayMs);
     });
 
     if (bootstrapAuthState) {
       const cachedProfile = bootstrapAuthState.user ? readCachedProfile(bootstrapAuthState.user.id) : null;
       setSession(bootstrapAuthState.session);
       setUser(bootstrapAuthState.user);
-      userRef.current = bootstrapAuthState.user;
-      profileRef.current = cachedProfile;
       setProfile(cachedProfile);
-      setProfileLoading(false);
+      profileRef.current = cachedProfile;
       setLoading(false);
+
       if (!cachedProfile) {
-        scheduleProfileRefresh(bootstrapAuthState.user, { force: true, silent: true, delayMs: 1200 });
+        scheduleProfileRefresh(bootstrapAuthState.user, true, bootstrapProfileRefreshDelayMs);
       }
     } else {
       void getBootstrapAuthState().then((initialState) => {
@@ -424,9 +374,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
         applyAuthState(initialState.session);
         profileRef.current = cachedProfile;
         setProfile(cachedProfile);
-        setProfileLoading(false);
+
         if (!cachedProfile) {
-          scheduleProfileRefresh(initialState.user, { force: true, silent: true, delayMs: 1200 });
+          scheduleProfileRefresh(initialState.user, true, bootstrapProfileRefreshDelayMs);
         }
       });
     }
@@ -445,9 +395,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
     () => ({
       user,
       profile,
-      profileLoading,
-      profileError,
-      profileMissing: Boolean(user && !profileLoading && !profile && !profileError),
       isAdmin: Boolean(profile?.is_admin),
       session,
       loading,
@@ -460,45 +407,43 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setLoading(true);
 
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (!error) {
-          writeForcedSignedOut(false);
-          if (data.session) {
-            bootstrapAuthState = {
-              session: data.session,
-              user: data.session.user,
-            };
+        if (error) {
+          setLoading(false);
+          return { error: error.message };
+        }
 
-            userRef.current = data.session.user;
-            profileRef.current = null;
-            clearCachedProfile();
-            setSession(data.session);
-            setUser(data.session.user);
-            setProfile(null);
-            setProfileError("");
-            setProfileLoading(true);
-            setLoading(false);
+        writeForcedSignedOut(false);
 
-            void loadProfileForUser(data.session.user)
-              .then((nextProfile) => {
-                profileRef.current = nextProfile;
-                writeCachedProfile(data.session.user.id, nextProfile);
-                setProfile(nextProfile);
-                setProfileError("");
-              })
-              .catch((profileLoadError) => {
-                profileRef.current = null;
-                clearCachedProfile();
-                setProfile(null);
-                setProfileError(formatSupabaseError(profileLoadError, "Failed to load account profile."));
-              })
-              .finally(() => {
-                setProfileLoading(false);
-              });
-          }
+        if (data.session) {
+          bootstrapAuthState = {
+            session: data.session,
+            user: data.session.user,
+          };
+
+          userRef.current = data.session.user;
+          profileRef.current = null;
+          clearCachedProfile();
+          setSession(data.session);
+          setUser(data.session.user);
+          setProfile(null);
+          setLoading(false);
+
+          void loadProfileForUser(data.session.user)
+            .then((nextProfile) => {
+              profileRef.current = nextProfile;
+              writeCachedProfile(data.session.user.id, nextProfile);
+              setProfile(nextProfile);
+            })
+            .catch(() => {
+              profileRef.current = null;
+              clearCachedProfile();
+              setProfile(null);
+            });
         } else {
           setLoading(false);
         }
-        return error ? { error: error.message } : {};
+
+        return {};
       },
       async signUp(email, password) {
         if (!supabase) {
@@ -512,9 +457,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
             emailRedirectTo: getAppUrl("login"),
           },
         });
+
         if (!error) {
           writeForcedSignedOut(false);
         }
+
         return error ? { error: error.message } : {};
       },
       async resetPassword(email) {
@@ -525,6 +472,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: getAppUrl("login"),
         });
+
         return error ? { error: error.message } : {};
       },
       async updatePassword(password) {
@@ -537,6 +485,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           writeForcedSignedOut(false);
           setAuthFlow(null);
         }
+
         return error ? { error: error.message } : {};
       },
       clearAuthFlow() {
@@ -552,13 +501,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setAuthFlow(null);
         setSession(null);
         setUser(null);
+        setProfile(null);
+        setLoading(false);
         userRef.current = null;
         profileRef.current = null;
         clearCachedProfile();
-        setProfile(null);
-        setProfileLoading(false);
-        setProfileError("");
-        setLoading(false);
         clearStoredSupabaseSession();
 
         if (!supabase) {
@@ -578,7 +525,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         }
       },
     }),
-    [authFlow, loading, profile, profileError, profileLoading, session, user],
+    [authFlow, loading, profile, session, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -589,5 +536,6 @@ export function useAuth() {
   if (!context) {
     throw new Error("useAuth must be used inside AuthProvider");
   }
+
   return context;
 }
