@@ -1062,7 +1062,7 @@ input[type="number"] {
 
 .summary-account-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 0.75rem;
   direction: ltr;
@@ -1081,7 +1081,8 @@ input[type="number"] {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: left;
+  text-align: right;
+  justify-self: stretch;
 }
 
 .summary-logout {
@@ -1091,6 +1092,7 @@ input[type="number"] {
   background: rgba(255, 255, 255, 0.92);
   color: #133c55;
   font-weight: 700;
+  justify-self: start;
 }
 
 .summary-pair-grid,
