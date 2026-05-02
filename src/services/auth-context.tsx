@@ -3,6 +3,7 @@ import type { PropsWithChildren } from "react";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import type { AppUser } from "../types";
 import { fetchCurrentUserProfile } from "./api";
+import { formatSupabaseError, measureAsync } from "./errors";
 import { supabase } from "./supabase";
 
 type AuthFlow = "recovery" | null;
@@ -134,9 +135,9 @@ async function loadProfileForUser(nextUser: User | null) {
       window.setTimeout(() => reject(new Error("Timed out while loading account profile.")), profileLoadTimeoutMs);
     });
 
-    return await Promise.race([fetchCurrentUserProfile(nextUser.id), timeoutPromise]);
+    return await measureAsync("auth:profile", () => Promise.race([fetchCurrentUserProfile(nextUser.id), timeoutPromise]));
   } catch (error) {
-    throw error instanceof Error ? error : new Error("Failed to load account profile.");
+    throw new Error(formatSupabaseError(error, "Failed to load account profile."));
   }
 }
 
@@ -246,7 +247,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         }
 
         setProfile(null);
-        setProfileError(error instanceof Error ? error.message : "Failed to load account profile.");
+        setProfileError(formatSupabaseError(error, "Failed to load account profile."));
       }
 
       if (!isActive) {

@@ -3,6 +3,7 @@ import { MonthDayList } from "../components/MonthDayList";
 import { MonthSelector } from "../components/MonthSelector";
 import { SummaryCards } from "../components/SummaryCards";
 import { deleteShift, fetchHolidays, fetchSettings, fetchShifts, removeHoliday, upsertHoliday, upsertShift } from "../services/api";
+import { formatSupabaseError, measureAsync } from "../services/errors";
 import { exportShiftsToExcel, exportShiftsToPdf } from "../services/export";
 import { useAuth } from "../services/auth-context";
 import type { HolidayType, ManualHoliday, ShiftInput, ShiftRecord, UserSettings } from "../types";
@@ -83,7 +84,9 @@ export function DashboardPage() {
 
     setLoadError("");
 
-    Promise.all([fetchShifts(user.id, start, end), fetchSettings(user.id), fetchHolidays(user.id)])
+    measureAsync("dashboard:initial-load", () =>
+      Promise.all([fetchShifts(user.id, start, end), fetchSettings(user.id), fetchHolidays(user.id)]),
+    )
       .then(([loadedShifts, loadedSettings, loadedHolidays]) => {
         setShifts(loadedShifts);
         setSettings(loadedSettings);
@@ -96,7 +99,7 @@ export function DashboardPage() {
         );
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Failed to load saved data for this account.";
+        const message = formatSupabaseError(error, "Failed to load saved data for this account.");
         setLoadError(message);
         setShifts([]);
         setManualHolidays([]);
