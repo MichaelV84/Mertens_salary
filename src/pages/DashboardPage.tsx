@@ -63,7 +63,7 @@ function getInitialSelectedMonth() {
 }
 
 export function DashboardPage() {
-  const { user, loading, profileLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState(getInitialSelectedMonth);
   const [shifts, setShifts] = useState<ShiftRecord[]>([]);
   const [settings, setSettings] = useState<UserSettings>({
@@ -76,7 +76,7 @@ export function DashboardPage() {
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    if (!user || loading || profileLoading) {
+    if (!user || loading) {
       return;
     }
 
@@ -107,7 +107,7 @@ export function DashboardPage() {
         setShifts([]);
         setManualHolidays([]);
       });
-  }, [loading, profileLoading, selectedMonth, user]);
+  }, [loading, selectedMonth, user]);
 
   const { start: visibleMonthStart, end: visibleMonthEnd } = useMemo(() => getMonthRange(selectedMonth), [selectedMonth]);
   const visibleShifts = useMemo(

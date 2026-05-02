@@ -334,6 +334,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
             setProfile(null);
             setProfileError("");
             setProfileLoading(true);
+            setLoading(false);
+
+            void loadProfileForUser(data.session.user)
+              .then((nextProfile) => {
+                setProfile(nextProfile);
+                setProfileError("");
+              })
+              .catch((profileLoadError) => {
+                setProfile(null);
+                setProfileError(formatSupabaseError(profileLoadError, "Failed to load account profile."));
+              })
+              .finally(() => {
+                setProfileLoading(false);
+              });
           }
         } else {
           setLoading(false);
