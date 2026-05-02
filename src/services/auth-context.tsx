@@ -301,12 +301,33 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setAuthFlow(null);
       },
       async signOut() {
+        bootstrapAuthState = {
+          session: null,
+          user: null,
+        };
+
+        setAuthFlow(null);
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setProfileLoading(false);
+        setProfileError("");
+        setLoading(false);
+
         if (!supabase) {
+          if (typeof window !== "undefined") {
+            window.location.replace(getAppUrl("login"));
+          }
           return;
         }
 
-        setAuthFlow(null);
-        await supabase.auth.signOut();
+        try {
+          await supabase.auth.signOut();
+        } finally {
+          if (typeof window !== "undefined") {
+            window.location.replace(getAppUrl("login"));
+          }
+        }
       },
     }),
     [authFlow, loading, profile, profileError, profileLoading, session, user],
