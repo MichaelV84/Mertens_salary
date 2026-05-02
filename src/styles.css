@@ -1086,6 +1086,11 @@ input[type="number"] {
 }
 
 .summary-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(5.25rem, 8vw, 6.5rem);
+  min-width: 5.25rem;
   direction: rtl;
   padding: 0.7rem 0.85rem;
   border-radius: 14px;
@@ -1179,6 +1184,8 @@ input[type="number"] {
   }
 
   .summary-logout {
+    width: clamp(4.75rem, 22vw, 5.75rem);
+    min-width: 4.75rem;
     padding: 0.6rem 0.75rem;
     font-size: 0.9rem;
   }
