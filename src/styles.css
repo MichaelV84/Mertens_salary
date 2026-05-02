@@ -1061,16 +1061,18 @@ input[type="number"] {
 }
 
 .summary-account-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
+  direction: ltr;
 }
 
 .summary-email {
   min-width: 0;
-  flex: 1 1 auto;
   display: block;
+  width: 100%;
+  max-width: 100%;
   color: #fff;
   font-size: 1.1rem;
   line-height: 1.2;
@@ -1083,9 +1085,8 @@ input[type="number"] {
 }
 
 .summary-logout {
-  flex: 0 0 auto;
-  min-width: 0;
-  padding: 0.7rem 0.95rem;
+  direction: rtl;
+  padding: 0.7rem 0.85rem;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.92);
   color: #133c55;
@@ -1172,12 +1173,12 @@ input[type="number"] {
   }
 
   .summary-email {
-    font-size: 0.98rem;
+    font-size: 0.9rem;
   }
 
   .summary-logout {
-    padding: 0.65rem 0.85rem;
-    font-size: 0.95rem;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
   }
 
   .summary-pair-grid {
