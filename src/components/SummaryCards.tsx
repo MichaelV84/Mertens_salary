@@ -37,7 +37,9 @@ export function SummaryCards({
     <div className="summary-grid">
       <div className="card accent-card summary-card">
         <div className="summary-account-row">
-          <span className="summary-email">{user?.email}</span>
+          <span className="summary-email" dir="ltr" title={user?.email}>
+            {user?.email}
+          </span>
           <button type="button" className="summary-logout" onClick={() => void signOut()}>
             {labels.logout}
           </button>

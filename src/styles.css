@@ -1070,10 +1070,16 @@ input[type="number"] {
 .summary-email {
   min-width: 0;
   flex: 1 1 auto;
+  display: block;
   color: #fff;
   font-size: 1.1rem;
   line-height: 1.2;
-  overflow-wrap: anywhere;
+  direction: ltr;
+  unicode-bidi: plaintext;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
 }
 
 .summary-logout {
