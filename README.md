@@ -1,35 +1,119 @@
 # Mertens Salary
 
-Salary calculator web app built with React, TypeScript and Supabase.
+Web app for tracking work shifts, calculating monthly salary, and exporting reports.
 
-## What is included
+Built with:
+- React
+- TypeScript
+- Vite
+- Supabase
 
-- Auth with Supabase email/password
-- Salary engine with shift splitting and overtime rules
-- Monthly dashboard with shift CRUD
-- Settings page with rate and holidays
-- Excel and PDF export
-- Minimal admin page
-- Supabase schema with RLS
+## Features
 
-## Local setup
+- Email/password auth via Supabase
+- Monthly dashboard with per-day shift editing
+- Salary calculation with:
+  - regular hours
+  - evening/night rates
+  - overtime
+  - weekends
+  - manual holiday overrides
+  - sick day / day off handling
+- User settings for base rate and default hours
+- Excel export
+- PDF export
+- Minimal admin page for blocking/unblocking users
 
-1. Copy `.env.example` to `.env`
-2. Fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-3. Run `npm install`
-4. Run `npm test`
-5. Run `npm run dev`
+## Environment
 
-## GitHub Pages
+Create a local `.env` file from `.env.example`.
 
-This project can be deployed to GitHub Pages with GitHub Actions.
+Required variables:
 
-1. Push the repository to GitHub
-2. In GitHub, go to `Settings -> Pages`
-3. Set `Source` to `GitHub Actions`
-4. In `Settings -> Secrets and variables -> Actions`, add:
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run tests:
+
+```bash
+npm test
+```
+
+Start dev server:
+
+```bash
+npm run dev
+```
+
+Build production bundle:
+
+```bash
+npm run build
+```
+
+## Project Notes
+
+- The app uses Supabase Auth session restore on page refresh.
+- Account profile loading is treated as a background enhancement and should not block the dashboard.
+- Selected month is stored in `localStorage`.
+- App profile cache is stored in `localStorage` to keep refresh and tab restore fast.
+
+## Deploy to GitHub Pages
+
+Deployment is handled by GitHub Actions from `.github/workflows/deploy.yml`.
+
+Requirements:
+
+1. In GitHub repository settings, set `Pages -> Source` to `GitHub Actions`
+2. Add these repository secrets:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-5. Push to `main` to trigger deployment
+3. Push to `main`
 
-The workflow will build the app, publish `dist`, and create a `404.html` fallback for SPA routes.
+What the workflow does:
+
+- installs dependencies with `npm ci`
+- runs tests
+- builds the app
+- publishes `dist`
+- creates `dist/404.html` for SPA route fallback on GitHub Pages
+
+## Useful Scripts
+
+```bash
+npm run dev
+npm test
+npm run build
+```
+
+## Current Structure
+
+```text
+src/
+  components/
+  pages/
+  services/
+  types/
+  utils/
+```
+
+Main areas:
+
+- `src/services/` — Supabase, auth, API, export helpers
+- `src/pages/` — login, dashboard, settings, admin
+- `src/utils/` — salary calculation and date/holiday helpers
+
+## Maintenance Notes
+
+- If GitHub Pages shows an old build, check the latest workflow run in `Actions`.
+- If the IDE highlights `tsconfig.app.json` in red but build passes, restart the TypeScript server before changing config.
