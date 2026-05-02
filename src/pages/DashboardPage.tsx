@@ -80,6 +80,7 @@ export function DashboardPage() {
       return;
     }
 
+    let isActive = true;
     const { start, end } = getMonthContextRange(selectedMonth);
 
     setLoadError("");
@@ -93,6 +94,10 @@ export function DashboardPage() {
       return [loadedShifts, loadedSettings, loadedHolidays] as const;
     })
       .then(([loadedShifts, loadedSettings, loadedHolidays]) => {
+        if (!isActive) {
+          return;
+        }
+
         setShifts(loadedShifts);
         setSettings(loadedSettings);
         setManualHolidays(
@@ -104,11 +109,19 @@ export function DashboardPage() {
         );
       })
       .catch((error: unknown) => {
+        if (!isActive) {
+          return;
+        }
+
         const message = formatSupabaseError(error, "Failed to load saved data for this account.");
         setLoadError(message);
         setShifts([]);
         setManualHolidays([]);
       });
+
+    return () => {
+      isActive = false;
+    };
   }, [loading, selectedMonth, user]);
 
   const { start: visibleMonthStart, end: visibleMonthEnd } = useMemo(() => getMonthRange(selectedMonth), [selectedMonth]);
