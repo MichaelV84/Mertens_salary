@@ -5,6 +5,34 @@ import { useAuth } from "../services/auth-context";
 
 type LoginMode = "login" | "register" | "forgot" | "reset";
 
+const copy = {
+  email: "\u05d0\u05d9\u05d9\u05de\u05d9\u05d9\u05dc",
+  password: "\u05e1\u05d9\u05e1\u05de\u05d4",
+  newPassword: "\u05e1\u05d9\u05e1\u05de\u05d4 \u05d7\u05d3\u05e9\u05d4",
+  showPassword: "\u05d4\u05e6\u05d2 \u05e1\u05d9\u05e1\u05de\u05d4",
+  hidePassword: "\u05d4\u05e1\u05ea\u05e8 \u05e1\u05d9\u05e1\u05de\u05d4",
+  backToLogin: "\u05d7\u05d6\u05e8\u05d4 \u05dc\u05db\u05e0\u05d9\u05e1\u05d4",
+  forgotPassword: "\u05e9\u05db\u05d7\u05ea \u05e1\u05d9\u05e1\u05de\u05d4?",
+  noAccount: "\u05d0\u05d9\u05df \u05dc\u05da \u05d7\u05e9\u05d1\u05d5\u05df?",
+  haveAccount: "\u05db\u05d1\u05e8 \u05d9\u05e9 \u05dc\u05da \u05d7\u05e9\u05d1\u05d5\u05df?",
+  loginTitle: "\u05de\u05d7\u05e9\u05d1\u05d5\u05df \u05e9\u05db\u05e8",
+  loginSubtitle: "\u05d4\u05ea\u05d7\u05d1\u05e8 \u05db\u05d3\u05d9 \u05dc\u05e0\u05d4\u05dc \u05d0\u05ea \u05e0\u05ea\u05d5\u05e0\u05d9 \u05d4\u05e9\u05db\u05e8 \u05e9\u05dc\u05da.",
+  loginSubmit: "\u05db\u05e0\u05d9\u05e1\u05d4",
+  registerTitle: "\u05de\u05d7\u05e9\u05d1\u05d5\u05df \u05e9\u05db\u05e8",
+  registerSubtitle: "\u05e6\u05d5\u05e8 \u05d7\u05e9\u05d1\u05d5\u05df \u05db\u05d3\u05d9 \u05dc\u05e0\u05d4\u05dc \u05d0\u05ea \u05e0\u05ea\u05d5\u05e0\u05d9 \u05d4\u05e9\u05db\u05e8 \u05e9\u05dc\u05da.",
+  registerSubmit: "\u05d4\u05e8\u05e9\u05de\u05d4",
+  forgotTitle: "\u05d0\u05d9\u05e4\u05d5\u05e1 \u05e1\u05d9\u05e1\u05de\u05d4",
+  forgotSubtitle: "\u05e0\u05e9\u05dc\u05d7 \u05dc\u05de\u05d9\u05d9\u05dc \u05e9\u05dc\u05da \u05e7\u05d9\u05e9\u05d5\u05e8 \u05e7\u05e6\u05e8 \u05dc\u05d4\u05d2\u05d3\u05e8\u05ea \u05e1\u05d9\u05e1\u05de\u05d4 \u05d7\u05d3\u05e9\u05d4.",
+  forgotSubmit: "\u05e9\u05dc\u05d7 \u05e7\u05d9\u05e9\u05d5\u05e8",
+  resetTitle: "\u05e1\u05d9\u05e1\u05de\u05d4 \u05d7\u05d3\u05e9\u05d4",
+  resetSubtitle: "\u05d1\u05d7\u05e8 \u05e1\u05d9\u05e1\u05de\u05d4 \u05d7\u05d3\u05e9\u05d4 \u05db\u05d3\u05d9 \u05dc\u05d4\u05d9\u05db\u05e0\u05e1 \u05e9\u05d5\u05d1 \u05dc\u05d7\u05e9\u05d1\u05d5\u05df.",
+  resetSubmit: "\u05e9\u05de\u05d5\u05e8 \u05e1\u05d9\u05e1\u05de\u05d4",
+  resetPrompt: "\u05d4\u05d6\u05df \u05e1\u05d9\u05e1\u05de\u05d4 \u05d7\u05d3\u05e9\u05d4 \u05dc\u05d7\u05e9\u05d1\u05d5\u05df \u05e9\u05dc\u05da",
+  resetSuccess: "\u05d4\u05e1\u05d9\u05e1\u05de\u05d4 \u05e2\u05d5\u05d3\u05db\u05e0\u05d4 \u05d1\u05d4\u05e6\u05dc\u05d7\u05d4",
+  forgotSuccess: "\u05e9\u05dc\u05d7\u05e0\u05d5 \u05e7\u05d9\u05e9\u05d5\u05e8 \u05dc\u05d0\u05d9\u05e4\u05d5\u05e1 \u05d4\u05e1\u05d9\u05e1\u05de\u05d4 \u05dc\u05de\u05d9\u05d9\u05dc \u05e9\u05dc\u05da",
+  registerSuccess: "\u05d1\u05d3\u05d5\u05e7 \u05d0\u05ea \u05d4\u05de\u05d9\u05d9\u05dc \u05db\u05d3\u05d9 \u05dc\u05d0\u05e9\u05e8 \u05d0\u05ea \u05d4\u05d7\u05e9\u05d1\u05d5\u05df",
+} as const;
+
 function getRecoveryMode() {
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   return hashParams.get("type") === "recovery";
@@ -26,39 +54,39 @@ export function LoginPage() {
   useEffect(() => {
     if (getRecoveryMode() || authFlow === "recovery") {
       setMode("reset");
-      setMessage("הזן סיסמה חדשה לחשבון שלך");
+      setMessage(copy.resetPrompt);
     }
   }, [authFlow]);
 
-  const copy = useMemo(() => {
+  const modeCopy = useMemo(() => {
     if (mode === "forgot") {
       return {
-        title: "איפוס סיסמה",
-        subtitle: "נשלח למייל שלך קישור קצר להגדרת סיסמה חדשה.",
-        submit: "שלח קישור",
+        title: copy.forgotTitle,
+        subtitle: copy.forgotSubtitle,
+        submit: copy.forgotSubmit,
       };
     }
 
     if (mode === "reset") {
       return {
-        title: "סיסמה חדשה",
-        subtitle: "בחר סיסמה חדשה כדי להיכנס שוב לחשבון.",
-        submit: "שמור סיסמה",
+        title: copy.resetTitle,
+        subtitle: copy.resetSubtitle,
+        submit: copy.resetSubmit,
       };
     }
 
     if (mode === "register") {
       return {
-        title: "מחשבון שכר",
-        subtitle: "צור חשבון כדי לנהל את נתוני השכר שלך.",
-        submit: "הרשמה",
+        title: copy.registerTitle,
+        subtitle: copy.registerSubtitle,
+        submit: copy.registerSubmit,
       };
     }
 
     return {
-      title: "מחשבון שכר",
-      subtitle: "התחבר כדי לנהל את נתוני השכר שלך.",
-      submit: "כניסה",
+      title: copy.loginTitle,
+      subtitle: copy.loginSubtitle,
+      submit: copy.loginSubmit,
     };
   }, [mode]);
 
@@ -67,13 +95,13 @@ export function LoginPage() {
 
     if (mode === "forgot") {
       const result = await resetPassword(email);
-      setMessage(result.error ?? "שלחנו קישור לאיפוס הסיסמה למייל שלך");
+      setMessage(result.error ?? copy.forgotSuccess);
       return;
     }
 
     if (mode === "reset") {
       const result = await updatePassword(password);
-      setMessage(result.error ?? "הסיסמה עודכנה בהצלחה");
+      setMessage(result.error ?? copy.resetSuccess);
       if (!result.error) {
         setPassword("");
         clearAuthFlow();
@@ -82,23 +110,33 @@ export function LoginPage() {
       return;
     }
 
-    const action = mode === "login" ? signIn : signUp;
-    const result = await action(email, password);
-    setMessage(result.error ?? (mode === "login" ? "ברוך הבא" : "בדוק את המייל כדי לאשר את החשבון"));
+    if (mode === "login") {
+      const result = await signIn(email, password);
+      if (!result.error) {
+        navigate("/", { replace: true });
+        return;
+      }
+
+      setMessage(result.error);
+      return;
+    }
+
+    const result = await signUp(email, password);
+    setMessage(result.error ?? copy.registerSuccess);
   }
 
   const isPasswordMode = mode === "login" || mode === "register" || mode === "reset";
 
   return (
     <div className="auth-shell">
-      <form className="card auth-card" onSubmit={handleSubmit}>
+      <form className="card auth-card" onSubmit={(event) => void handleSubmit(event)}>
         <div className="auth-header">
-          <h1 className="auth-title">{copy.title}</h1>
-          <p className="auth-subtitle">{copy.subtitle}</p>
+          <h1 className="auth-title">{modeCopy.title}</h1>
+          <p className="auth-subtitle">{modeCopy.subtitle}</p>
         </div>
 
         <div className="field">
-          <label>אימייל</label>
+          <label>{copy.email}</label>
           <input
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -109,19 +147,19 @@ export function LoginPage() {
 
         {isPasswordMode ? (
           <div className="field">
-            <label>{mode === "reset" ? "סיסמה חדשה" : "סיסמה"}</label>
+            <label>{mode === "reset" ? copy.newPassword : copy.password}</label>
             <div className="password-field">
               <input
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 type={showPassword ? "text" : "password"}
-                placeholder={mode === "reset" ? "סיסמה חדשה" : "סיסמה"}
+                placeholder={mode === "reset" ? copy.newPassword : copy.password}
               />
               <button
                 type="button"
                 className="password-toggle"
                 onClick={() => setShowPassword((current) => !current)}
-                aria-label={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
+                aria-label={showPassword ? copy.hidePassword : copy.showPassword}
               >
                 {showPassword ? "🙈" : "👁"}
               </button>
@@ -132,29 +170,29 @@ export function LoginPage() {
         {message ? <p className="auth-message">{message}</p> : null}
 
         <div className="auth-actions">
-          <button type="submit">{copy.submit}</button>
+          <button type="submit">{modeCopy.submit}</button>
 
           <div className="auth-secondary-actions">
             {mode === "login" ? (
               <>
                 <button type="button" className="auth-link-button" onClick={() => setMode("forgot")}>
-                  שכחת סיסמה?
+                  {copy.forgotPassword}
                 </button>
                 <button type="button" className="auth-link-button" onClick={() => setMode("register")}>
-                  אין לך חשבון?
+                  {copy.noAccount}
                 </button>
               </>
             ) : null}
 
             {mode === "register" ? (
               <button type="button" className="auth-link-button" onClick={() => setMode("login")}>
-                כבר יש לך חשבון?
+                {copy.haveAccount}
               </button>
             ) : null}
 
             {mode === "forgot" ? (
               <button type="button" className="auth-link-button" onClick={() => setMode("login")}>
-                חזרה לכניסה
+                {copy.backToLogin}
               </button>
             ) : null}
 
@@ -168,7 +206,7 @@ export function LoginPage() {
                   window.history.replaceState({}, document.title, getLoginPath());
                 }}
               >
-                חזרה לכניסה
+                {copy.backToLogin}
               </button>
             ) : null}
           </div>
