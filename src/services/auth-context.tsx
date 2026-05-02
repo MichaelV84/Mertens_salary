@@ -267,7 +267,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
           return { error: missingSupabaseError };
         }
 
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: getAppUrl("login"),
+          },
+        });
         return error ? { error: error.message } : {};
       },
       async resetPassword(email) {
