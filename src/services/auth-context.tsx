@@ -67,6 +67,31 @@ function writeStoredAuthFlow(authFlow: AuthFlow) {
   window.sessionStorage.removeItem(authFlowStorageKey);
 }
 
+function clearStoredSupabaseSession() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const storages = [window.localStorage, window.sessionStorage];
+
+  for (const storage of storages) {
+    const keysToRemove: string[] = [];
+
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (!key) {
+        continue;
+      }
+
+      if (key === authFlowStorageKey || key.startsWith("sb-")) {
+        keysToRemove.push(key);
+      }
+    }
+
+    keysToRemove.forEach((key) => storage.removeItem(key));
+  }
+}
+
 function isRecoveryUrl() {
   if (typeof window === "undefined") {
     return false;
@@ -313,6 +338,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setProfileLoading(false);
         setProfileError("");
         setLoading(false);
+        clearStoredSupabaseSession();
 
         if (!supabase) {
           if (typeof window !== "undefined") {
@@ -322,8 +348,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
         }
 
         try {
-          await supabase.auth.signOut();
+          await supabase.auth.signOut({ scope: "local" });
         } finally {
+          clearStoredSupabaseSession();
           if (typeof window !== "undefined") {
             window.location.replace(getAppUrl("login"));
           }
