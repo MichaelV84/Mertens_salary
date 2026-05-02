@@ -85,9 +85,11 @@ export function DashboardPage() {
     setLoadError("");
 
     measureAsync("dashboard:initial-load", async () => {
-      const loadedShifts = await fetchShifts(user.id, start, end);
-      const loadedSettings = await fetchSettings(user.id);
-      const loadedHolidays = await fetchHolidays(user.id);
+      const [loadedShifts, loadedSettings, loadedHolidays] = await Promise.all([
+        fetchShifts(user.id, start, end),
+        fetchSettings(user.id),
+        fetchHolidays(user.id),
+      ]);
       return [loadedShifts, loadedSettings, loadedHolidays] as const;
     })
       .then(([loadedShifts, loadedSettings, loadedHolidays]) => {

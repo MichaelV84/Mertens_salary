@@ -235,10 +235,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const bootstrapUser = bootstrapAuthState?.user;
     return bootstrapUser ? readCachedProfile(bootstrapUser.id) : null;
   });
-  const [profileLoading, setProfileLoading] = useState(() => {
-    const bootstrapUser = bootstrapAuthState?.user;
-    return bootstrapUser ? !readCachedProfile(bootstrapUser.id) : false;
-  });
+  const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [session, setSession] = useState<Session | null>(() => bootstrapAuthState?.session ?? null);
   const [loading, setLoading] = useState(() => (supabase ? bootstrapAuthState === null : false));
@@ -289,7 +286,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         const cachedProfile = readCachedProfile(nextUser.id);
         profileRef.current = cachedProfile;
         setProfile(cachedProfile);
-        setProfileLoading(!cachedProfile);
+        setProfileLoading(false);
         setProfileError("");
       }
       setLoading(false);
@@ -300,7 +297,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       };
     }
 
-    async function refreshProfile(nextUser: User | null, options?: { force?: boolean }) {
+    async function refreshProfile(nextUser: User | null, options?: { force?: boolean; silent?: boolean }) {
       if (!isActive) {
         return;
       }
@@ -316,13 +313,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       const hasCurrentProfile = userRef.current?.id === nextUser.id && Boolean(profileRef.current);
       if (!options?.force && hasCurrentProfile) {
-        setProfileLoading(false);
-        setProfileError("");
+        if (!options?.silent) {
+          setProfileLoading(false);
+          setProfileError("");
+        }
         return;
       }
 
-      setProfileLoading(true);
-      setProfileError("");
+      if (!options?.silent) {
+        setProfileLoading(true);
+        setProfileError("");
+      }
 
       try {
         const nextProfile = await loadProfileForUser(nextUser);
@@ -340,12 +341,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
         const hasStaleProfile = userRef.current?.id === nextUser.id && Boolean(profileRef.current);
         if (hasStaleProfile) {
-          setProfileError("");
+          if (!options?.silent) {
+            setProfileError("");
+          }
         } else {
           profileRef.current = null;
           clearCachedProfile();
           setProfile(null);
-          setProfileError(formatSupabaseError(error, "Failed to load account profile."));
+          if (!options?.silent) {
+            setProfileError(formatSupabaseError(error, "Failed to load account profile."));
+          }
         }
       }
 
@@ -353,7 +358,19 @@ export function AuthProvider({ children }: PropsWithChildren) {
         return;
       }
 
-      setProfileLoading(false);
+      if (!options?.silent) {
+        setProfileLoading(false);
+      }
+    }
+
+    function scheduleProfileRefresh(nextUser: User | null, options?: { force?: boolean; silent?: boolean; delayMs?: number }) {
+      window.setTimeout(() => {
+        if (!isActive) {
+          return;
+        }
+
+        void refreshProfile(nextUser, options);
+      }, options?.delayMs ?? 0);
     }
 
     if (!supabase) {
@@ -377,13 +394,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
         event === "PASSWORD_RECOVERY" ||
         (!isSameUser && event !== "INITIAL_SESSION");
 
-      window.setTimeout(() => {
-        if (!isActive) {
-          return;
-        }
-
-        void refreshProfile(nextSession?.user ?? null, { force: shouldForceProfileRefresh });
-      }, 0);
+      scheduleProfileRefresh(nextSession?.user ?? null, {
+        force: shouldForceProfileRefresh,
+        silent: true,
+        delayMs: 800,
+      });
     });
 
     if (bootstrapAuthState) {
@@ -393,9 +408,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       userRef.current = bootstrapAuthState.user;
       profileRef.current = cachedProfile;
       setProfile(cachedProfile);
-      setProfileLoading(Boolean(bootstrapAuthState.user && !cachedProfile));
+      setProfileLoading(false);
       setLoading(false);
-      void refreshProfile(bootstrapAuthState.user, { force: !cachedProfile });
+      if (!cachedProfile) {
+        scheduleProfileRefresh(bootstrapAuthState.user, { force: true, silent: true, delayMs: 1200 });
+      }
     } else {
       void getBootstrapAuthState().then((initialState) => {
         if (!isActive) {
@@ -407,8 +424,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
         applyAuthState(initialState.session);
         profileRef.current = cachedProfile;
         setProfile(cachedProfile);
-        setProfileLoading(Boolean(initialState.user && !cachedProfile));
-        void refreshProfile(initialState.user, { force: !cachedProfile });
+        setProfileLoading(false);
+        if (!cachedProfile) {
+          scheduleProfileRefresh(initialState.user, { force: true, silent: true, delayMs: 1200 });
+        }
       });
     }
 
