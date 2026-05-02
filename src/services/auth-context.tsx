@@ -28,6 +28,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const missingSupabaseError = "חסרים משתני סביבה של Supabase";
 const authFlowStorageKey = "mertens-auth-flow";
+const forcedSignedOutStorageKey = "mertens-forced-signed-out";
 const profileLoadTimeoutMs = 6000;
 
 interface BootstrapAuthState {
@@ -65,6 +66,27 @@ function writeStoredAuthFlow(authFlow: AuthFlow) {
   }
 
   window.sessionStorage.removeItem(authFlowStorageKey);
+}
+
+function readForcedSignedOut() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.sessionStorage.getItem(forcedSignedOutStorageKey) === "1";
+}
+
+function writeForcedSignedOut(value: boolean) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (value) {
+    window.sessionStorage.setItem(forcedSignedOutStorageKey, "1");
+    return;
+  }
+
+  window.sessionStorage.removeItem(forcedSignedOutStorageKey);
 }
 
 function clearStoredSupabaseSession() {
@@ -130,12 +152,21 @@ async function getBootstrapAuthState() {
     return bootstrapAuthState;
   }
 
+  if (readForcedSignedOut() && !isRecoveryUrl()) {
+    bootstrapAuthState = {
+      session: null,
+      user: null,
+    };
+    return bootstrapAuthState;
+  }
+
   if (!bootstrapAuthPromise) {
     bootstrapAuthPromise = supabase.auth
       .getSession()
       .then(({ data }) => {
-        const session = data.session;
-        const user = session?.user ?? null;
+        const shouldIgnoreSession = readForcedSignedOut() && !isRecoveryUrl();
+        const session = shouldIgnoreSession ? null : data.session;
+        const user = shouldIgnoreSession ? null : session?.user ?? null;
         bootstrapAuthState = { session, user };
         return bootstrapAuthState;
       })
@@ -168,14 +199,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     function applyAuthState(nextSession: Session | null) {
-      const nextUser = nextSession?.user ?? null;
+      const shouldIgnoreSession = readForcedSignedOut() && !isRecoveryUrl();
+      const safeSession = shouldIgnoreSession ? null : nextSession;
+      const nextUser = safeSession?.user ?? null;
 
       bootstrapAuthState = {
-        session: nextSession,
+        session: safeSession,
         user: nextUser,
       };
 
-      setSession(nextSession);
+      setSession(safeSession);
       setUser(nextUser);
       if (!nextUser) {
         setProfile(null);
@@ -285,6 +318,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
         }
 
         const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (!error) {
+          writeForcedSignedOut(false);
+        }
         return error ? { error: error.message } : {};
       },
       async signUp(email, password) {
@@ -299,6 +335,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
             emailRedirectTo: getAppUrl("login"),
           },
         });
+        if (!error) {
+          writeForcedSignedOut(false);
+        }
         return error ? { error: error.message } : {};
       },
       async resetPassword(email) {
@@ -318,6 +357,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
         const { error } = await supabase.auth.updateUser({ password });
         if (!error) {
+          writeForcedSignedOut(false);
           setAuthFlow(null);
         }
         return error ? { error: error.message } : {};
@@ -326,6 +366,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setAuthFlow(null);
       },
       async signOut() {
+        writeForcedSignedOut(true);
         bootstrapAuthState = {
           session: null,
           user: null,
