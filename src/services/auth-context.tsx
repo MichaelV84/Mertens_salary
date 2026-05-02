@@ -318,9 +318,25 @@ export function AuthProvider({ children }: PropsWithChildren) {
           return { error: missingSupabaseError };
         }
 
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        setLoading(true);
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (!error) {
           writeForcedSignedOut(false);
+          if (data.session) {
+            bootstrapAuthState = {
+              session: data.session,
+              user: data.session.user,
+            };
+
+            setSession(data.session);
+            setUser(data.session.user);
+            setProfile(null);
+            setProfileError("");
+            setProfileLoading(true);
+          }
+        } else {
+          setLoading(false);
         }
         return error ? { error: error.message } : {};
       },
